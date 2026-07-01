@@ -7,3 +7,4 @@ export 'Parsexx.dart';
 export 'Platformxx.dart';
 export 'Streamxx.dart';
 export 'Utilxx.dart';
+export "TypeExpand.dart";
