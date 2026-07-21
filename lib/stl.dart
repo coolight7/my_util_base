@@ -1,5 +1,4 @@
 import 'dart:collection';
-
 import 'package:string_util_xx/StringUtilxx.dart';
 
 /// 不对可重复的键值对进行支持
@@ -174,7 +173,7 @@ class AhoCorasick {
   }
 
   void build() {
-    final queue = <int>[];
+    final queue = Queue<int>();
     _nodes[0].fail = 0;
 
     // 初始化根节点的子节点
@@ -186,7 +185,7 @@ class AhoCorasick {
 
     // BFS 构建失败指针
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
 
       for (final entry in _nodes[current].children.entries) {
         final char = entry.key;

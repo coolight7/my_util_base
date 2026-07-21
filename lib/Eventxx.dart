@@ -406,7 +406,6 @@ class EventxxQueue_c<T, T1> {
     if (_isRunning) {
       return;
     }
-    list.removeWhere((element) => false);
     _isRunning = true;
     while (list.isNotEmpty) {
       final item = list.first;

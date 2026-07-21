@@ -103,9 +103,7 @@ class Utilxx_c {
     } else if (list.length == 2) {
       final result = fun(list.first, list.last);
       if (result > 0) {
-        final temp = list.first;
-        list.first = list.last;
-        list.last = temp;
+        return [list.last, list.first];
       }
       return list;
     } else {
@@ -152,6 +150,10 @@ class Utilxx_c {
     required Duration maxDuration,
   }) {
     assert(maxDuration.inMilliseconds >= minDuration.inMilliseconds);
+    final diff = maxDuration.inMilliseconds - minDuration.inMilliseconds;
+    if (diff <= 0) {
+      return Future.delayed(minDuration);
+    }
     return Future.delayed(Duration(
       milliseconds: random.nextInt(
             maxDuration.inMilliseconds - minDuration.inMilliseconds,
