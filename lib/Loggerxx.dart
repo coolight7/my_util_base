@@ -188,7 +188,7 @@ class LogxxRecord {
       "loggerName": loggerName,
       "time": time.millisecondsSinceEpoch,
       "sequenceNumber": sequenceNumber,
-      "content": (null == content) ? convert.jsonEncode(content) : null,
+      "content": (null != content) ? convert.jsonEncode(content) : null,
     };
     return convert.jsonEncode(remap);
   }
