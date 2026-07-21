@@ -202,7 +202,7 @@ class Parsexx_c {
     switch (type) {
       case FormatxxDurationType_e.hhMMSS:
         if (duration.inHours > 0) {
-          hours = duration.inHours.toString().padLeft(0, '2');
+          hours = duration.inHours.toString().padLeft(2, '0');
         }
         minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
         seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
