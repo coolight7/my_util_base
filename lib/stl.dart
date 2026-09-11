@@ -1,4 +1,6 @@
 import 'dart:collection';
+import 'dart:typed_data';
+
 import 'package:string_util_xx/StringUtilxx.dart';
 
 /// 不对可重复的键值对进行支持
@@ -120,6 +122,9 @@ class AhoCorasick {
 
   final List<_TrieNode> _nodes = [];
   final List<String> _patterns = [];
+
+  /// 各模式串的 code unit 长度（匹配时避免反复取 `codeUnits`）
+  final List<int> _patternLen = [];
   final Map<int, int>? shiftSheet;
   final bool caseInsensitive;
 
@@ -154,6 +159,7 @@ class AhoCorasick {
 
   void addPattern(String pattern) {
     _patterns.add(pattern);
+    _patternLen.add(pattern.codeUnits.length);
     int current = 0;
 
     for (final char in pattern.codeUnits) {
@@ -218,28 +224,27 @@ class AhoCorasick {
     bool onlyContains = false,
   }) {
     final matches = <ACMatch>[];
+    final length = text.length;
     int current = 0;
 
-    // 使用codeUnits处理Unicode字符
-    final codeUnits = text.codeUnits;
-    for (int index = start; index < codeUnits.length; ++index) {
-      final useChar = onCharCode(codeUnits[index]);
+    // 使用 codeUnitAt 逐字符扫描
+    for (int index = start; index < length; ++index) {
+      final codeUnit = text.codeUnitAt(index);
+      final useChar = onCharCode(codeUnit);
       // 跳转失败指针直到找到匹配或回到根节点
       while (current > 0 && !_nodes[current].children.containsKey(useChar)) {
         current = _nodes[current].fail;
       }
 
       // 移动到下一个节点
-      if (_nodes[current].children.containsKey(useChar)) {
-        current = _nodes[current].children[useChar]!;
-      } else {
-        current = 0; // 没有匹配时回到根节点
-      }
+      final next = _nodes[current].children[useChar];
+      current = (null == next) ? 0 : next;
 
       // 收集所有匹配的模式
-      for (final patternId in _nodes[current].outputs) {
-        final patternLength = _patterns[patternId].codeUnits.length;
-        final startIndex = index - patternLength + 1;
+      final outputs = _nodes[current].outputs;
+      for (int i = 0; i < outputs.length; ++i) {
+        final patternId = outputs[i];
+        final startIndex = index - _patternLen[patternId] + 1;
         if (startIndex >= 0) {
           matches.add(ACMatch(startIndex, index + 1, patternId));
           if (onlyContains) {
@@ -271,8 +276,31 @@ class AhoCorasick {
     return result;
   }
 
+  /// 是否存在任一匹配
+  ///
+  /// 等价于 `search(text, start: start, onlyContains: true).isNotEmpty`
   bool contains(String text, {int start = 0}) {
-    return search(text, start: start, onlyContains: true).isNotEmpty;
+    final length = text.length;
+    int current = 0;
+
+    for (int index = start; index < length; ++index) {
+      final codeUnit = text.codeUnitAt(index);
+      final useChar = onCharCode(codeUnit);
+      while (current > 0 && !_nodes[current].children.containsKey(useChar)) {
+        current = _nodes[current].fail;
+      }
+
+      final next = _nodes[current].children[useChar];
+      current = (null == next) ? 0 : next;
+
+      final outputs = _nodes[current].outputs;
+      for (int i = 0; i < outputs.length; ++i) {
+        if (index - _patternLen[outputs[i]] + 1 >= 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   String removeAll(String text, {int start = 0}) {
